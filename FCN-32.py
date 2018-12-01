@@ -203,6 +203,7 @@ def fcn_model_fn(features, labels, mode):
                                    kernel_regularizer= L2,
                                    trainable  = trainable)
 
+    print(logit.shape)
     # Do pixel-wise classification :
 
     predictions = {
@@ -232,21 +233,23 @@ def fcn_model_fn(features, labels, mode):
     
     label_f = tf.reshape(labels,(-1,1))
     
-    idx_mask = tf.where(label_f >= 0 )
+    keep = tf.where(tf.greater_equal(labels, 0) )
     
-    print(idx_mask)
+    logit_f = tf.gather(logit_f, keep)
+    
+    label_f = tf.gather(label_f, keep)
+    
+    tf.assert_equal(tf.shape(label_f)[0], tf.shape(logit_f)[0])
+    
+    tf.assert_non_negative(label_f) # Void is labelled -1, which should be excluded from the loss func
 
-    logit  = tf.boolean_mask(logit_f, idx_mask)
-    
-    labels = tf.boolean_mask(label_f, idx_mask)
-        
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logit)
+    loss = tf.losses.sparse_softmax_cross_entropy(labels=tf.cast(label_f,tf.int32), logits=logit_f)
     
     # Configure the trainable Op (for TRAIN mode)
     
     if mode == tf.estimator.ModeKeys.TRAIN:
     
-        optimizer = tf.train.MomentumOptimizer(learning_rate=0.001, momemtum = 0.99)
+        optimizer = tf.train.MomentumOptimizer(learning_rate=0.000001, momentum = 0.99)
         
         train_op = optimizer.minimize(loss=loss, global_step = tf.train.get_global_step())
         
