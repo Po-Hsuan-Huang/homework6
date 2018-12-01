@@ -41,18 +41,28 @@ def load():
     # in the semantic label, 0 means non-road, 1 means road, -1 means void
     # remember to ignore -1 when computing the loss function.
     
-    train_data = {'x' : tf.convert_to_tensor( np.asarray([ imread(i) for i in train_imgs[:-val_set] ] )),
-                  'y': tf.convert_to_tensor( np.asarray([pickle.load(open(i,'rb'),encoding='latin1')  for i in train_labels[:-val_set] ]))
+#    train_data = {'x' : tf.convert_to_tensor( np.asarray([ imread(i) for i in train_imgs[:-val_set] ] )),
+#                  'y': tf.convert_to_tensor( np.asarray([pickle.load(open(i,'rb'),encoding='latin1')  for i in train_labels[:-val_set] ]))
+#                  }
+#    
+#    eval_data = {'x' : tf.convert_to_tensor(np.asarray([ imread(i) for i in train_imgs[val_set:]])),
+#                 'y': tf.convert_to_tensor(np.asarray([ pickle.load(open(i,'rb'),encoding='latin1') for i in train_labels[val_set:]]))
+#                  }
+#    
+#    test_data = {'x' : tf.convert_to_tensor(np.asarray([ imread(i) for i in test_imgs])),
+#                 'y' : tf.convert_to_tensor(np.asarray([ pickle.load(open(i,'rb'),encoding='latin1')  for i in test_labels]))   
+#                  }
+    train_data = {'x' : np.asarray([ imread(i) for i in train_imgs[:-val_set] ] ),
+                  'y':  np.asarray([pickle.load(open(i,'rb'),encoding='latin1')  for i in train_labels[:-val_set] ])
                   }
     
-    eval_data = {'x' : tf.convert_to_tensor(np.asarray([ imread(i) for i in train_imgs[val_set:]])),
-                 'y': tf.convert_to_tensor(np.asarray([ pickle.load(open(i,'rb'),encoding='latin1') for i in train_labels[val_set:]]))
+    eval_data = {'x' : np.asarray([ imread(i) for i in train_imgs[val_set:]]),
+                 'y': np.asarray([ pickle.load(open(i,'rb'),encoding='latin1') for i in train_labels[val_set:]])
                   }
     
-    test_data = {'x' : tf.convert_to_tensor(np.asarray([ imread(i) for i in test_imgs])),
-                 'y' : tf.convert_to_tensor(np.asarray([ pickle.load(open(i,'rb'),encoding='latin1')  for i in test_labels]))   
+    test_data = {'x' : np.asarray([ imread(i) for i in test_imgs]),
+                 'y' : np.asarray([ pickle.load(open(i,'rb'),encoding='latin1')  for i in test_labels])   
                   }
-
 
     
     return train_data, eval_data, test_data

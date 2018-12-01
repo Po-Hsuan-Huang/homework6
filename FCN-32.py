@@ -49,7 +49,7 @@ def fcn_model_fn(features, labels, mode):
  
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block2_dp2')
 
-    x =  tf.layers.max_pooling2d(x, (2, 2), strides=(1, 1), name='block1_pool')
+    x =  tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block1_pool')
     
     # Block 2
     x = tf.layers.conv2d(x, 128, (3, 3),
@@ -72,7 +72,7 @@ def fcn_model_fn(features, labels, mode):
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block2_dp2')
 
 
-    x = tf.layers.max_pooling2d(x,(2, 2), strides=(1, 1), name='block2_pool')
+    x = tf.layers.max_pooling2d(x,(2, 2), strides=(2, 2), name='block2_pool')
     
     # Block 3
     x = tf.layers.conv2d (x, 256, (3, 3),
@@ -104,7 +104,7 @@ def fcn_model_fn(features, labels, mode):
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block3_dp3')
 
     
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(1, 1), name='block3_pool')
+    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block3_pool')
     
     # Block 4
     x = tf.layers.conv2d (x, 512, (3, 3),
@@ -134,7 +134,7 @@ def fcn_model_fn(features, labels, mode):
     
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block4_dp3')
 
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(1, 1), name='block4_pool')
+    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block4_pool')
     
     # Block 5
     x = tf.layers.conv2d (x, 512, (3, 3),
@@ -164,7 +164,7 @@ def fcn_model_fn(features, labels, mode):
 
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block5_dp3')
 
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(1, 1), name='block5_pool')
+    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block5_pool')
     
     # Block 6
     
@@ -195,20 +195,21 @@ def fcn_model_fn(features, labels, mode):
 
     x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block6_dp3')
     
-    logit = tf.layers.conv2d_transpose(x, 1, (64,64), strides=(32,32),
+    # There are two classes [road, non-road]
+    logit = tf.layers.conv2d_transpose(x, 2, (64,64), strides=(32,32),
                                    activation='sigmoid',
                                    padding='same',
                                    name='block6_deconv1',
                                    kernel_regularizer= L2,
                                    trainable  = trainable)
-    return logit
-    # Do pixel-wise predictions :
-    
+
+    # Do pixel-wise classification :
+
     predictions = {
             
       # Generate predictions (for PREDICT and EVAL mode)
       
-      "classes": tf.argmax(input=tf.reshape(logit,(1,None)), axis=1).reshape(logit.shape),
+      "classes": tf.argmax(logit, axis =3 ),
       
       # Add `softmax_tensor` to the graph. It is used for PREDICT and by the logging_hook`.
       
@@ -223,6 +224,22 @@ def fcn_model_fn(features, labels, mode):
     # Calculate Loss (for both TRAIN and EVAL modes)
     # Homework requires tf.nn.sigmoid_cross_entropy_with_logits()
     
+    # ignore where label is -1 , which corresponds to Void.
+    
+    logit_f = tf.reshape(logit, (-1,1,1,1)) 
+        
+    logit_f = tf.squeeze(logit_f, axis = [2,3])
+    
+    label_f = tf.reshape(labels,(-1,1))
+    
+    idx_mask = tf.where(label_f >= 0 )
+    
+    print(idx_mask)
+
+    logit  = tf.boolean_mask(logit_f, idx_mask)
+    
+    labels = tf.boolean_mask(label_f, idx_mask)
+        
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logit)
     
     # Configure the trainable Op (for TRAIN mode)
@@ -256,15 +273,16 @@ if __name__ == "__main__":
     train_data, eval_data, test_data = data_load.load()
     
     # Construct model
-    pic = np.random.randint((test_data['x']).shape[0])
-    
+#    pic = np.random.randint((test_data['x']).shape[0])
+    pic = np.random.randint(len(test_data['x']))
+
     image_sample = test_data['x'][pic]
     
     label_sample = test_data['y'][pic]
     
-    image_sample = tf.Session().run(image_sample)
-    
-    label_sample = tf.Session().run(label_sample)
+#    image_sample = tf.Session().run(image_sample)
+#    
+#    label_sample = tf.Session().run(label_sample)
     
     plt.figure(figsize=(20,40))
     plt.title('data')
