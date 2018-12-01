@@ -40,6 +40,8 @@ some_op   = [img_batch, lab_batch]
 # service ops
 init_op   = tf.initialize_all_variables()
 
+
+
 # let run stuff
 with tf.Session() as sess:
 
