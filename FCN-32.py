@@ -363,8 +363,8 @@ if __name__ == "__main__":
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(
             x=eval_data['x'],
             y=eval_data['y'],
-            num_epochs=None,
-            batch_size=1,
+            num_epochs=1,
+            batch_size=10,
             shuffle=False)
        
         eval_results = fcn_segmentor.evaluate(input_fn=eval_input_fn)
