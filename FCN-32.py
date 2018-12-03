@@ -18,6 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import data_load
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 
 def fcn_model_fn(features, labels, mode):
     
@@ -31,192 +33,203 @@ def fcn_model_fn(features, labels, mode):
     
     seed = 2019
     
-    x = tf.layers.conv2d(features, 64, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block1_conv1',
-                      kernel_regularizer= L2,
-                      trainable = trainable)
+    with tf.name_scope("vgg16_pretrained"):
+        
+        x = tf.layers.conv2d(features, 64, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv1_1',
+                          kernel_regularizer= L2,
+                          trainable = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp1_1')
     
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block1_dp1')
+        x =  tf.layers.conv2d(x, 64, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv1_2',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+     
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp1_2')
+    
+        x =  tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='pool1')
+        
+        # Block 2
+        x = tf.layers.conv2d(x, 128, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv2_1',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp2_1')
+    
+        
+        x = tf.layers.conv2d(x, 128, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv2-2',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp2_2')
+    
+    
+        x = tf.layers.max_pooling2d(x,(2, 2), strides=(2, 2), name='pool2')
+        
+        # Block 3
+        x = tf.layers.conv2d (x, 256, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv3_1',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp3_1')
+    
+        x = tf.layers.conv2d (x, 256, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv3_2',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp3_2')
+    
+        
+        x = tf.layers.conv2d (x, 256, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv3_3',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp3_3')
+    
+        
+        x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='pool3')
+        
+        # Block 4
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv4_1',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp4_1')
+    
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv4_2',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp4_2')
+    
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv4_3',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp4_3')
+    
+        x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='pool4')
+        
+        # Block 5
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv5_1',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp5_1')
+        
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv5_2',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+    
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp5_2')
+        
+        x = tf.layers.conv2d (x, 512, (3, 3),
+                          activation='relu',
+                          padding='same',
+                          name='conv5_3',
+                          kernel_regularizer= L2,
+                          trainable  = trainable)
+    
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp5_3')
+    
+        x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='pool5')
+    
+    with tf.name_scope("deconv_layers"):
+        # Block 6
+        
+        x = tf.layers.conv2d(x, 4096, (7,7), 
+                             activation='relu',
+                             padding='same',
+                             name='conv6_1',
+                             kernel_regularizer= L2,
+                             trainable  = trainable)
+        
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp6_1')
+    
+        x = tf.layers.conv2d(x, 4096, (1,1),
+                             activation='relu',
+                             padding='same',
+                             name='conv6_2',
+                             kernel_regularizer= L2,
+                             trainable  = trainable)
+    
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp6_2')
+        
+        x = tf.layers.conv2d(x, 1, (1,1),
+                             activation='relu',
+                             padding='same',
+                             name='conv6_3',
+                             kernel_regularizer= L2,
+                             trainable  = trainable) 
+    
+        x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='dp6_3')
+        
+        # There are two classes [1: road, 0:  non-road]
+        heatmap = tf.layers.conv2d_transpose(x, 1, (64,64), strides=(32,32),
+                                       activation='linear',
+                                       padding='same',
+                                       name='deconv6_1',
+                                       kernel_regularizer= L2,
+                                       trainable  = trainable)
+        
+        logit = tf.nn.sigmoid(heatmap, name = 'logit')
+        
+        pred = tf.to_int32(logit > 0.5)
+        
+        pred = tf.squeeze(pred, axis = 3)
 
-    x =  tf.layers.conv2d(x, 64, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block1_conv2',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
- 
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block2_dp2')
-
-    x =  tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block1_pool')
+#    print(heatmap.shape)
     
-    # Block 2
-    x = tf.layers.conv2d(x, 128, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block2_conv1',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block2_dp1')
-
-    
-    x = tf.layers.conv2d(x, 128, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block2_conv2',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block2_dp2')
-
-
-    x = tf.layers.max_pooling2d(x,(2, 2), strides=(2, 2), name='block2_pool')
-    
-    # Block 3
-    x = tf.layers.conv2d (x, 256, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block3_conv1',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block3_dp1')
-
-    x = tf.layers.conv2d (x, 256, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block3_conv2',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block3_dp2')
-
-    
-    x = tf.layers.conv2d (x, 256, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block3_conv3',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block3_dp3')
-
-    
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block3_pool')
-    
-    # Block 4
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block4_conv1',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block4_dp1')
-
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block4_conv2',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block4_dp2')
-
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block4_conv3',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block4_dp3')
-
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block4_pool')
-    
-    # Block 5
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block5_conv1',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block5_dp1')
-    
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block5_conv2',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block5_dp2')
-    
-    x = tf.layers.conv2d (x, 512, (3, 3),
-                      activation='relu',
-                      padding='same',
-                      name='block5_conv3',
-                      kernel_regularizer= L2,
-                      trainable  = trainable)
-
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block5_dp3')
-
-    x = tf.layers.max_pooling2d(x, (2, 2), strides=(2, 2), name='block5_pool')
-    
-    # Block 6
-    
-    x = tf.layers.conv2d(x, 4096, (7,7), 
-                         activation='relu',
-                         padding='same',
-                         name='block6_conv1',
-                         kernel_regularizer= L2,
-                         trainable  = trainable)
-    
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block6_dp1')
-
-    x = tf.layers.conv2d(x, 4096, (1,1),
-                         activation='relu',
-                         padding='same',
-                         name='block6_conv2',
-                         kernel_regularizer= L2,
-                         trainable  = trainable)
-
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block6_dp2')
-    
-    x = tf.layers.conv2d(x, 1, (1,1),
-                         activation='relu',
-                         padding='same',
-                         name='block6_conv3',
-                         kernel_regularizer= L2,
-                         trainable  = trainable) 
-
-    x = tf.layers.dropout(x, rate = 0.4, seed = seed, training = trainable , name ='block6_dp3')
-    
-    # There are two classes [road, non-road]
-    logit = tf.layers.conv2d_transpose(x, 2, (64,64), strides=(32,32),
-                                   activation='sigmoid',
-                                   padding='same',
-                                   name='block6_deconv1',
-                                   kernel_regularizer= L2,
-                                   trainable  = trainable)
-
-    print(logit.shape)
     # Do pixel-wise classification :
 
     predictions = {
             
       # Generate predictions (for PREDICT and EVAL mode)
       
-      "classes": tf.argmax(logit, axis =3 ),
+      "classes": pred, # tf.argmax(logit, axis =3 )
       
       # Add `softmax_tensor` to the graph. It is used for PREDICT and by the logging_hook`.
       
-      "probabilities": tf.nn.softmax(logit, name="softmax_tensor")
+      "probabilities": logit  #tf.nn.softmax(logit, name="softmax_tensor")
 
       }
+    
 
     if mode == tf.estimator.ModeKeys.PREDICT:
       
@@ -224,32 +237,44 @@ def fcn_model_fn(features, labels, mode):
     
     # Calculate Loss (for both TRAIN and EVAL modes)
     # Homework requires tf.nn.sigmoid_cross_entropy_with_logits()
-    
-    # ignore where label is -1 , which corresponds to Void.
-    
-    logit_f = tf.reshape(logit, (-1,1,1,1)) 
+    if False : 
+        # ignore where label is -1 , which corresponds to Void.
         
-    logit_f = tf.squeeze(logit_f, axis = [2,3])
+        logit_f = tf.reshape(heatmap, (-1,1,1,1)) # flatten the output
+            
+        logit_f = tf.squeeze(logit_f, axis = [2,3])
+        
+        label_f = tf.reshape(labels,(-1,1))
+        
+        keep = tf.where(tf.greater_equal(labels, 0) )
+        
+        logit_f = tf.gather(logit_f, keep)
+        
+        label_f = tf.gather(label_f, keep)
+        
+        tf.assert_equal(tf.shape(label_f)[0], tf.shape(logit_f)[0])
+        
+        tf.assert_non_negative(label_f) # Void is labelled -1, which should be excluded from the loss func
     
-    label_f = tf.reshape(labels,(-1,1))
     
-    keep = tf.where(tf.greater_equal(labels, 0) )
+        # sigmoid_cross_entorpy implements tf.nn.sparse_signoid_cross_entropy_with_logit, 
+        # it will convert output to logit in the op
+        loss = tf.losses.sigmoid_cross_entropy(multi_class_labels = label_f, logits=logit_f)
     
-    logit_f = tf.gather(logit_f, keep)
-    
-    label_f = tf.gather(label_f, keep)
-    
-    tf.assert_equal(tf.shape(label_f)[0], tf.shape(logit_f)[0])
-    
-    tf.assert_non_negative(label_f) # Void is labelled -1, which should be excluded from the loss func
+    heatmap = tf.squeeze(heatmap, axis =3)
 
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=tf.cast(label_f,tf.int32), logits=logit_f)
-    
+    label_f = tf.to_int32(labels > 0)
+
+    tf.assert_equal(tf.shape(label_f), tf.shape(heatmap))
+
+    tf.assert_non_negative(label_f)
+
+    loss = tf.losses.sigmoid_cross_entropy( multi_class_labels = label_f ,logits = heatmap)    
     # Configure the trainable Op (for TRAIN mode)
     
     if mode == tf.estimator.ModeKeys.TRAIN:
     
-        optimizer = tf.train.MomentumOptimizer(learning_rate=0.000001, momentum = 0.99)
+        optimizer = tf.train.MomentumOptimizer(learning_rate=0.001, momentum = 0.99)
         
         train_op = optimizer.minimize(loss=loss, global_step = tf.train.get_global_step())
         
@@ -257,15 +282,26 @@ def fcn_model_fn(features, labels, mode):
     
     # Add evaluation metrics (for EVAL mode)
     
-    tp = tf.metrics.true_positives(labels,predictions['classes'])
+    # Set up logging for metrics
     
-    fp = tf.metrics.false_positives(labels,predictions['classes'])
+    iou = tf.metrics.mean_iou(label_f,predictions['classes'], num_classes = 2 , name = 'mean_iou')
+         
+    eval_metric_ops = {"IoU": iou}
+
+    tensors_to_log_prob = {"probabilities": "deconv_layers/logit"}
     
-    fn = tf.metrics.false_negatives(labels,predictions['classes'])
+    tensors_to_log_iou = {"mean_iou": iou}
     
-    eval_metric_ops = {"IoU": tp/(tp + fp + fn)}
+    tf.summary.scalar('mean_iou', iou[0])
+
+    logging_hook = tf.train.LoggingTensorHook(
+                                   tensors=tensors_to_log_iou, every_n_iter=200)
     
-    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+    if mode == tf.estimator.ModeKeys.EVAL :
+
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops = eval_metric_ops)
+
+    
 
 if __name__ == "__main__":
     
@@ -276,61 +312,81 @@ if __name__ == "__main__":
     train_data, eval_data, test_data = data_load.load()
     
     # Construct model
-#    pic = np.random.randint((test_data['x']).shape[0])
-    pic = np.random.randint(len(test_data['x']))
+    if False :
 
-    image_sample = test_data['x'][pic]
+#    pic = np.random.randint((test_data['x']).shape[0])
+        pic = np.random.randint(len(test_data['x']))
     
-    label_sample = test_data['y'][pic]
+        image_sample = test_data['x'][pic]
+        
+        label_sample = test_data['y'][pic]
     
 #    image_sample = tf.Session().run(image_sample)
 #    
 #    label_sample = tf.Session().run(label_sample)
-    
-    plt.figure(figsize=(20,40))
-    plt.title('data')
-    plt.imshow(image_sample)
-    
-    plt.figure(figsize =(20,40))
-    plt.title('gt')
-    plt.imshow(label_sample)
+        plt.figure(figsize=(20,40))
+        plt.title('data')
+        plt.imshow(image_sample)
+        
+        plt.figure(figsize =(20,40))
+        plt.title('gt')
+        plt.imshow(label_sample)
         
     # Create the Estimator
     
+    pretrained_weights = tf.estimator.WarmStartSettings(
+            ckpt_to_initialize_from=os.path.join(root_dir,'pretrained_weights','vgg_16.ckpt'),
+            vars_to_warm_start= tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope = 'vgg16_pretrained'))
+    
     fcn_segmentor = tf.estimator.Estimator(
     
-    model_fn=fcn_model_fn, model_dir=root_dir)
-   
-    # Set up logging for predictions
-
-    tensors_to_log = {"probabilities": "softmax_tensor"}
-
-    logging_hook = tf.train.LoggingTensorHook(
-                                   tensors=tensors_to_log, every_n_iter=50)
+    model_fn=fcn_model_fn, model_dir=os.path.join(root_dir, 'ckpts'),  warm_start_from= pretrained_weights) 
+    
+    for epoch in range(100):
+    
     # Train the model
     
-    train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x=train_data['x'],
-        y=train_data['y'],
-        batch_size=1,
-        num_epochs=None, # number of epochs to iterate over data. If None will run forever.
-        shuffle=True)
-   
-    fcn_segmentor.train(
-        input_fn=train_input_fn,
-        steps=20000,
-        hooks=[logging_hook])
-   
+        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x=train_data['x'],
+            y=train_data['y'],
+            batch_size=1,
+            num_epochs=None, # number of epochs to iterate over data. If None will run forever.
+            shuffle=True)
+       
+        fcn_segmentor.train(
+            input_fn=train_input_fn,
+            steps=200
+            )
+       
     # Evaluate the model and print results
-   
-    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x=eval_data['x'],
-        y=eval_data['y'],
-        num_epochs=1,
-        shuffle=False)
-   
-    eval_results = fcn_segmentor.evaluate(input_fn=eval_input_fn)
-   
-    print(eval_results)
-
+       
+        eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x=eval_data['x'],
+            y=eval_data['y'],
+            num_epochs=None,
+            batch_size=1,
+            shuffle=False)
+       
+        eval_results = fcn_segmentor.evaluate(input_fn=eval_input_fn)
+       
+        print('eval_loss :', eval_results)
+    
+    
+    # We withhold the predction from test set untill all the hyperparameters are finetuned.
+    
+    PREDICT = False    
+    if PREDICT == True : 
+        pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+                x=test_data['x'],
+                y=test_data['y'],
+                num_epochs=1,
+                shuffle=False)
+        
+        # predict method returns a generator
+        
+        pred = list( fcn_segmentor.predict(input_fn = pred_input_fn))
+        
+        pred = [p['predictions'][0] for p in pred]
+        
+        print('prediction:', pred)
 
