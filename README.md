@@ -31,3 +31,7 @@ Minor :
      
      Since there are so many classification to do in one image, so the batch size cannot be big. As far as I have tried, 1080Ti can handle 10 images, but not 14 images in one batch.   
      Need to learn how to inspect witch variable is accumulating in my precious GPU memory. 
+     
+     Message "Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info." It is not very helpful.
+     
+     In fact, many documentaiton of TF is not very helpful since most of them are implement in sess.run() level, not for estimator() lavel.
