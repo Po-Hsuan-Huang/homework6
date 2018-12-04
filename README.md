@@ -13,4 +13,4 @@ https://drive.google.com/drive/folders/1_iduvS3hoACRcH15mMRM_g7dXWa1WHo3?usp=sha
 
 ![alt text][logo]
 
-[logo]: https://github.com/Po-Hsuan-Huang/homework6/edit/master/demo/pred_16.png "Logo Title Text 2"
+[logo]: https://github.com/Po-Hsuan-Huang/homework6/tree/master/demo/pred_16.png "Logo Title Text 2"
