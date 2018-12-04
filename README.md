@@ -20,3 +20,9 @@ By change I am able to log in the tensorboard after the process being terminated
 4. predict output not implemented yet.
 
     The final result should be exhibited as an image which can be comapred with images in HW6_dataset/gt folder.
+    
+Minor : 
+
+5. Have to implement avg loss collector
+
+     The loss for evaluation and training are ad hoc. Long term average is needed to know if the trend of loss is decreasing.
