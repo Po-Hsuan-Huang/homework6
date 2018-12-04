@@ -17,9 +17,17 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import data_load
+from datetime import datetime
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
+
+# assign each run to a separate log file, so the tensorboard can function properly. 
+now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+root_logdir = "logs"
+
+logdir = "{}/run-{}/".format(root_logdir,now)
 
 def fcn_model_fn(features, labels, mode):
     
@@ -278,6 +286,8 @@ def fcn_model_fn(features, labels, mode):
         
         train_op = optimizer.minimize(loss=loss, global_step = tf.train.get_global_step())
         
+        tf.summary.scalar('train_loss', loss)
+        
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
     
     # Add evaluation metrics (for EVAL mode)
@@ -298,21 +308,31 @@ def fcn_model_fn(features, labels, mode):
                                    tensors=tensors_to_log_iou, every_n_iter=200)
     
     if mode == tf.estimator.ModeKeys.EVAL :
+        
+        tf.summary.scalar('eval_loss', loss)
 
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops = eval_metric_ops)
 
     
-
+#%%
 if __name__ == "__main__":
     
     root_dir = '/home/pohsuanh/Documents/Computer_Vision/HW6'
 
     # Load training and eval data
   
-    train_data, eval_data, test_data = data_load.load()
+    train_data, eval_data, test_data, gt = data_load.load()
+    
+    # Flags
+    
+    TRAIN = False
+
+    PREDICT = True    
+
+    DRAW_SAMPLE = False
     
     # Construct model
-    if False :
+    if DRAW_SAMPLE == True :
 
 #    pic = np.random.randint((test_data['x']).shape[0])
         pic = np.random.randint(len(test_data['x']))
@@ -341,44 +361,48 @@ if __name__ == "__main__":
     fcn_segmentor = tf.estimator.Estimator(
     
     model_fn=fcn_model_fn, model_dir=os.path.join(root_dir, 'ckpts'),  warm_start_from= pretrained_weights) 
+        
+    if TRAIN == True :
     
-    for epoch in range(100):
+        for epoch in range(100):
+        
+        # Train the model
+        
+            train_input_fn = tf.estimator.inputs.numpy_input_fn(
+                x=train_data['x'],
+                y=train_data['y'],
+                batch_size=1,
+                num_epochs=None, # number of epochs to iterate over data. If None will run forever.
+                shuffle=True)
+           
+            fcn_segmentor.train(
+                input_fn=train_input_fn,
+                steps=200
+                )
+           
+        # Evaluate the model and print results
+           
+            eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+                x=eval_data['x'],
+                y=eval_data['y'],
+                num_epochs=1,
+                batch_size=10,
+                shuffle=False)
+           
+            eval_results = fcn_segmentor.evaluate(input_fn=eval_input_fn)
+           
+            print('eval_loss :', eval_results)
+        
     
-    # Train the model
     
-        train_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x=train_data['x'],
-            y=train_data['y'],
-            batch_size=1,
-            num_epochs=None, # number of epochs to iterate over data. If None will run forever.
-            shuffle=True)
-       
-        fcn_segmentor.train(
-            input_fn=train_input_fn,
-            steps=200
-            )
-       
-    # Evaluate the model and print results
-       
-        eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x=eval_data['x'],
-            y=eval_data['y'],
-            num_epochs=1,
-            batch_size=10,
-            shuffle=False)
-       
-        eval_results = fcn_segmentor.evaluate(input_fn=eval_input_fn)
-       
-        print('eval_loss :', eval_results)
+#%%  We withhold the predction from test set untill all the hyperparameters are finetuned.
     
-    
-    # We withhold the predction from test set untill all the hyperparameters are finetuned.
-    
-    PREDICT = False    
-    if PREDICT == True : 
+    if PREDICT == True :
+        
         pred_input_fn = tf.estimator.inputs.numpy_input_fn(
                 x=test_data['x'],
                 y=test_data['y'],
+                batch_size =1,
                 num_epochs=1,
                 shuffle=False)
         
@@ -386,7 +410,30 @@ if __name__ == "__main__":
         
         pred = list( fcn_segmentor.predict(input_fn = pred_input_fn))
         
-        pred = [p['predictions'][0] for p in pred]
-        
-        print('prediction:', pred)
-
+        pred = [p['classes'] for p in pred]
+            
+        fig = plt.figure(1, figsize=(32,16))
+            
+        for i, p in enumerate(pred) : 
+            
+            fig.add_subplot(3,1,1)
+            
+            plt.title('camera photo')
+            
+            plt.imshow(test_data['x'][i])
+            
+            fig.add_subplot(3,1,2)
+            
+            plt.title('prediction')
+            
+            plt.imshow(p)
+            
+            fig.add_subplot(3,1,3)
+            
+            plt.title('ground truth')
+            
+            plt.imshow(gt['test'][i])
+            
+            filename = 'pred_{}.png'.format(i)
+            
+            plt.savefig(os.path.join(root_dir,'predictions',filename))

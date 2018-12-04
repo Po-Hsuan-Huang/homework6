@@ -25,6 +25,8 @@ def load():
         
         label_path = os.path.join(root_dir, 'HW6_Dataset', 'label')
         
+        gt_path = os.path.join(root_dir, 'HW6_Dataset','gt')
+        
         train_imgs = sorted( glob(os.path.join(img_path, 'train', '*png')))
         
         train_labels = sorted( glob(os.path.join(label_path,'train', '*label')))
@@ -32,6 +34,10 @@ def load():
         test_imgs = sorted( glob(os.path.join(img_path, 'test', '*png')))
         
         test_labels = sorted( glob(os.path.join(label_path, 'test', '*label')))
+        
+        train_gt = sorted(glob(os.path.join(gt_path, 'train','*png')))
+        
+        test_gt = sorted(glob(os.path.join(gt_path, 'test','*png')))
         
     val_set  = 45
     
@@ -63,8 +69,8 @@ def load():
     test_data = {'x' : np.asarray([ imread(i) for i in test_imgs]),
                  'y' : np.asarray([ pickle.load(open(i,'rb'),encoding='latin1')  for i in test_labels])   
                   }
-
+    gt = {'train' : [imread(i) for i in train_gt], 'test': [imread(i) for i in test_gt] }
     
-    return train_data, eval_data, test_data
+    return train_data, eval_data, test_data, gt
 
  
