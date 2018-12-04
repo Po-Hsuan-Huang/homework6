@@ -26,3 +26,8 @@ Minor :
 5. Have to implement avg loss collector
 
      The loss for evaluation and training are ad hoc. Long term average is needed to know if the trend of loss is decreasing.
+
+6. OOM out of memory error
+     
+     Since there are so many classification to do in one image, so the batch size cannot be big. As far as I have tried, 1080Ti can handle 10 images, but not 14 images in one batch.   
+     Need to learn how to inspect witch variable is accumulating in my precious GPU memory. 
